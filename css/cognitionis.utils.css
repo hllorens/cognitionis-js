@@ -1,0 +1,147 @@
+/* reset */
+
+
+
+
+
+/* --------- MODAL DIALOG ---------------------------------------------------- */
+.js-modal-window {
+	position: fixed;
+	top: 0; right: 0; bottom: 0; left: 0;
+	background: rgba(0,0,0,0.8);
+	z-index: 99999; /* could work without this. Just to make sure in case other elements have also positioning and positive z-indez */
+}
+
+.js-modal-window-transp {
+	position: fixed;
+	top: 0; right: 0; bottom: 0; left: 0;
+	background: rgba(0,0,0,0.0);
+	z-index: 99999; /* could work without this. Just to make sure in case other elements have also positioning and positive z-indez */
+}
+
+.js-modal-dialog {
+	width: 50%;
+	position: relative;
+	margin: 10% auto;
+	padding: 5px 2px 5px 10px;
+	background: #eee;
+}
+
+.js-modal-dialog h2{
+    padding:0;
+    margin: 10px 0 0 0;
+}
+
+.js-modal-dialog p{
+    margin: 0;
+    padding: 25px 15px 15px 5px;
+    text-align: justify;
+}
+
+.js-modal-dialog-progress {
+	width: 50%;
+	min-height:20px; /* was height in cult*/
+	/*position: relative;*/
+	margin: 240px auto; /*was 200px in cult*/
+	padding: 0% 1% 1% 1%; /*was a bit more in cult*/
+	background: #eee;
+}
+
+.js-modal-window > h1 {
+	color:#fff;
+	margin: 10% auto;
+	text-align:center;
+}
+
+.js-modal-img {
+	width: 100%;
+	margin-top: 10%;
+	text-align:center;
+}
+
+progress {
+	width: 100%;
+	height: 5px;
+    margin:0; padding:0;  /*was not in cult*/
+    vertical-align:0;   /*was not in cult*/
+    display:block;      /*was not in cult*/
+	/*height: 100%; breaks in chrome, IE, safari*/
+}
+/* -------------------------------------------------------------------------- */
+
+/*FORM VALIDATION*/
+.errorMessages {
+    background-color: #f2dede;
+    border: 2px solid #eed3d7;
+    border-radius: 4px;
+    color: #b94a48;
+    display: none;
+    list-style-type: disc;
+    margin: 0 10px 15px;
+    padding: 8px 35px 8px 30px;
+}
+
+.errorMessages span {
+    font-weight: bold;
+}
+
+
+
+table { margin: 1em; border-collapse: collapse; }
+td, th { padding: .3em;  } 
+
+/* --------------------------------------------------------------------------*/
+/* HAMBURGER */
+a#hamburger_icon svg {
+	fill: #000;
+	width: 40px;
+}
+
+.hamburger_menu {
+	width: 300px;
+	background-color:#000;
+	color:#fff;
+	position: absolute;
+	-webkit-transform: translate(-300px, 0);
+	transform: translate(-300px, 0);
+	transition: transform 0.3s ease;
+}
+.hamburger_menu.open {
+	-webkit-transform: translate(0, 0);
+	transform: translate(0, 0);
+}
+
+.hamburger_menu ul li a {
+    color:#eee;
+}
+
+a.boxclose{
+    float:right;
+    margin-top:10px;
+    margin-right:10px;
+    cursor:pointer;
+    color: #fff;
+    /*border: 1px solid #AEAEAE;*/
+    border-radius: 30px;
+    background: #605F61;
+    font-size: 31px;
+    font-weight: bold;
+    display: inline-block;
+    /*line-height: 0px;*/
+	text-align: center;
+    padding: 8px 4px 0px 4px;
+    min-width:48px;
+    min-height:48px;
+}
+
+.boxclose:before {
+    content: "X";
+}
+
+.small-text{
+    font-size:10px;
+    margin:0;
+    padding: 2px 5px;
+}
+
+
