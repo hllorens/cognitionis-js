@@ -96,6 +96,9 @@ a#hamburger_icon svg {
 	fill: #000;
 	width: 40px;
 }
+#hamburger_icon:hover{
+	cursor:pointer;
+}
 
 .hamburger_menu {
 	width: 300px;
@@ -132,11 +135,14 @@ a.boxclose{
     padding: 8px 4px 0px 4px;
     min-width:48px;
     min-height:48px;
-	text-decoration:none;
 }
 
 .boxclose:before {
     content: "X";
+}
+
+a.boxclose:hover {
+	text-decoration:none;
 }
 
 .small-text{
