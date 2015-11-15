@@ -132,6 +132,7 @@ a.boxclose{
     padding: 8px 4px 0px 4px;
     min-width:48px;
     min-height:48px;
+	text-decoration:none;
 }
 
 .boxclose:before {
