@@ -97,10 +97,11 @@ var ResourceLoader={
             // nonexistent appear as complete (doesn't work), so we use "width"
 			if (ResourceLoader.ret_media.images[get_resource_name(res_url)]===undefined ||
                 !ResourceLoader.ret_media.images[get_resource_name(res_url)].complete ||     
-                ResourceLoader.ret_media.images[get_resource_name(res_url)].width==0
+                (ResourceLoader.ret_media.images[get_resource_name(res_url)].width==0 &&
+                    res_url.toLowerCase().indexOf('.svg')==-1)
 				){
 				if(ResourceLoader.debug)
-                    console.log("INFO: "+res_url+" fired loaded but it is not loaded (res="+ResourceLoader.ret_media.images[get_resource_name(res_url)]+", complete="+ResourceLoader.ret_media.images[get_resource_name(res_url)].complete+" or width="+ResourceLoader.ret_media.images[get_resource_name(res_url)].width+").");
+                    console.log("INFO: "+res_url+" fired loaded but it is not loaded (res="+res_url+", complete="+ResourceLoader.ret_media.images[get_resource_name(res_url)].complete+" or width="+ResourceLoader.ret_media.images[get_resource_name(res_url)].width+").");
 				return; // break so this is still in "not loaded"
 			}
 			ResourceLoader.ret_media.images[get_resource_name(res_url)].removeEventListener(event_name, ResourceLoader.log_and_remove_from_not_loaded);
@@ -131,10 +132,12 @@ var ResourceLoader={
 			var res_url=ResourceLoader.not_loaded.images[i];
 			if (ResourceLoader.ret_media.images[get_resource_name(res_url)]!==undefined && 
                 ResourceLoader.ret_media.images[get_resource_name(res_url)].complete &&
-                ResourceLoader.ret_media.images[get_resource_name(res_url)].width>0){
-				if(ResourceLoader.debug) console.log(res_url+" complete==true removing from not loaded.");
+                (ResourceLoader.ret_media.images[get_resource_name(res_url)].width>0 || res_url.toLowerCase().indexOf('.svg')!=-1)){
+				if(ResourceLoader.debug) console.log(res_url+" complete==true (width>0 or svg) removing from not loaded.");
 				ResourceLoader.log_and_remove_from_not_loaded('complete==true','images',res_url);
-			}
+			}else{
+                if(ResourceLoader.debug) console.log(res_url+" checking if complete==true (width>0 or svg)...");
+            }
 		}
 	},
 	check_load_status: function() {
