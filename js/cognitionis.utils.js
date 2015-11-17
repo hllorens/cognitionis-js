@@ -364,14 +364,14 @@ function open_js_modal_alert(title_text, text_text, accept_function, cancel_func
 
 	if(typeof(accept_function)!='undefined'){
 		var accept_button=document.createElement('button');
-		accept_button.innerHTML='Aceptar';
+		accept_button.innerHTML='Ok';
 		accept_button.onclick=accept_function;
 		modal_dialog.appendChild(accept_button);
 	}
 
 	if(typeof(cancel_function)!='undefined'){
 		var cancel_button=document.createElement('button');
-		cancel_button.innerHTML='Cancelar';
+		cancel_button.innerHTML='Cancel';
 		cancel_button.onclick=cancel_function;
 		modal_dialog.appendChild(cancel_button);
 	}
