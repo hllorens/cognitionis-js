@@ -1143,6 +1143,11 @@ var random_array=function(array, num_elems, allow_repetition){
 	return items;
 }
 
+/* Shuffle the elements of an array in the same array Fisher-Yates*/
+var shuffle_array=function(o){
+    for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+}
+
 var Asciify={};
 Asciify.latin_map={"á":"a","é":"e","í":"i","ó":"o","ú":"u"};
 Asciify.asciify=function(str){return str.replace(/[^A-Za-z0-9\[\] ]/g,function(a){return Asciify.latin_map[a]||a})};
