@@ -679,7 +679,84 @@ var SoundChain={
 }
 
 
-///////////////////////////////////////////////////////////
+//////////////// Normal (no-sprite) audios handler ////////////////////////
+var AudioLib={
+	sounds_ref: undefined,
+	debug: false,
+	sound_single: undefined,
+	sound_single_ended: true,
+	sound_single_callback: undefined,
+	sound_arr: undefined,
+	sound_arr_ended: true,
+	sound_arr_pos: 0,
+	sound_arr_callback: undefined,
+	init: function(sounds_ref, activate_debug){
+	 	if(typeof(sounds_ref)=='undefined')
+				throw new Error("AudioLib sounds_ref must be defined");
+		AudioLib.sounds_ref=sounds_ref;
+		AudioLib.debug=false;
+		if(typeof(activate_debug)!=='undefined' && activate_debug==true) AudioLib.debug=activate_debug;
+	},
+	play_sound_arr: function(arr,callback){
+		if(!AudioLib.sound_arr_ended || !AudioLib.sound_single_ended)
+			throw new Error("AudioLib trying to play_sound_arr while another is still playing");
+		AudioLib.sound_arr_ended=false;
+		AudioLib.sound_arr=arr;
+	 	if(typeof(callback)=='undefined')
+				throw new Error("AudioLib play_sound_arr callback must be defined");
+		this.sound_arr_callback=callback;
+		if(AudioLib.sound_arr.length>0){
+			AudioLib.play_sound_single(AudioLib.sound_arr[AudioLib.sound_arr_pos],AudioLib.play_sound_arr_next);
+		}
+	},
+	play_sound_arr_next: function(){
+		if(!AudioLib.sound_arr_ended || !AudioLib.sound_single_ended)
+			throw new Error("AudioLib trying to play_sound_arr while another is still playing");
+		AudioLib.sound_arr_pos++;
+		if(AudioLib.sound_arr_pos < AudioLib.sound_arr.length){
+			AudioLib.play_sound_single(AudioLib.sound_arr[AudioLib.sound_arr_pos],AudioLib.play_sound_arr_next);
+		}else{
+			AudioLib.sound_arr=undefined;
+			AudioLib.sound_arr_pos=0;
+			AudioLib.sound_arr_ended=true;
+			AudioLib.sound_arr_callback();
+			AudioLib.sound_arr_callback=undefined;
+		}
+	},
+	play_sound_single: function(sound_name,callback){
+		if(!AudioLib.sound_arr_ended || !AudioLib.sound_single_ended)
+			throw new Error("AudioLib trying to play_sound_single while another is still playing");
+		AudioLib.sound_single_ended=false;
+		AudioLib.sound_single=sound_name;
+	 	if(typeof(callback)=='undefined')
+			throw new Error("AudioLib play_sound_arr callback must be defined");
+		AudioLib.sound_single_callback=callback;
+		if(!AudioLib.sounds_ref.hasOwnProperty(sound_name))
+			throw new Error("AudioLib play_sound_single "+sound_name+" not found");
+		AudioLib.sounds_ref[sound_name].play();
+		setTimeout(function(){AudioLib.check_sound_finished();}, 500);
+	},
+	check_sound_finished: function(){
+		if(AudioLib.sounds_ref[AudioLib.sound_single].ended){
+			if(AudioLib.debug) console.log("AudioLib ended: "+AudioLib.sound_single+" time: "+AudioLib.sounds_ref[AudioLib.sound_single].currentTime);
+			AudioLib.sound_single_ended=true;
+			AudioLib.sound_single_callback();
+		}else{
+			if(AudioLib.debug) console.log("AudioLib waiting..."+AudioLib.sound_single+" time: "+AudioLib.sounds_ref[AudioLib.sound_single].currentTime);
+			setTimeout(function(){AudioLib.check_sound_finished();}, 500);
+		}
+	}
+}
+
+// --------------------------------------------------
+
+
+
+
+
+
+
+
 
 
 /*
@@ -1093,7 +1170,7 @@ var hamburger_toggle=function(e){
 
 
 
-// Object Length
+// Object Methods
 function objectLength(obj) {
   var result = 0;
   for(var prop in obj) {
@@ -1102,6 +1179,14 @@ function objectLength(obj) {
 		}
   }
   return result;
+}
+
+var objectProperties=function(obj) {
+    var result = [];
+    for(var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {result.push(prop);}
+   }
+   return result;
 }
 
 
