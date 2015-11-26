@@ -988,6 +988,14 @@ var showFormAllErrorMessagesOnChange=function( event ) {
     }
 }
 
+var get_timestamp_str=function(){
+	var timestamp=new Date();
+	var timestamp_str=timestamp.getFullYear()+"-"+
+		pad_string((timestamp.getMonth()+1),2,"0") + "-" + pad_string(timestamp.getDate(),2,"0") + " " +
+		 pad_string(timestamp.getHours(),2,"0") + ":"  + pad_string(timestamp.getMinutes(),2,"0") + 
+			":"  + pad_string(timestamp.getSeconds(),2,"0");
+	return timestamp_str;
+}
 
 var calculateAge=function (dateString) {
     var today = new Date();
@@ -1170,7 +1178,7 @@ var hamburger_toggle=function(e){
 
 
 
-// Object Methods
+// Object Helpers
 function objectLength(obj) {
   var result = 0;
   for(var prop in obj) {
@@ -1180,7 +1188,6 @@ function objectLength(obj) {
   }
   return result;
 }
-
 var objectProperties=function(obj) {
     var result = [];
     for(var prop in obj) {
