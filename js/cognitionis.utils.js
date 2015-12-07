@@ -710,7 +710,7 @@ var AudioLib={
 		}
 	},
 	play_sound_arr_next: function(){
-		if(!AudioLib.sound_arr_ended || !AudioLib.sound_single_ended)
+		if(!AudioLib.sound_single_ended)
 			throw new Error("AudioLib trying to play_sound_arr while another is still playing");
 		AudioLib.sound_arr_pos++;
 		if(AudioLib.sound_arr_pos < AudioLib.sound_arr.length){
@@ -724,7 +724,7 @@ var AudioLib={
 		}
 	},
 	play_sound_single: function(sound_name,callback){
-		if(!AudioLib.sound_arr_ended || !AudioLib.sound_single_ended)
+		if(!AudioLib.sound_single_ended)
 			throw new Error("AudioLib trying to play_sound_single while another is still playing");
 		AudioLib.sound_single_ended=false;
 		AudioLib.sound_single=sound_name;
