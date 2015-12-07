@@ -334,7 +334,10 @@ var clickOrTouch = (('ontouchend' in window)) ? 'touchend' : 'click';
 /*
     If no accept or cancel functions are provided it shows a top right x to close
 */
-function open_js_modal_alert(title_text, text_text, accept_function, cancel_function){
+function open_js_modal_alert(title_text, text_text, accept_function, cancel_function,accept_text,cancel_text){
+    if(typeof(accept_text)=='undefined'){accept_text="Ok";}
+    if(typeof(cancel_text)=='undefined'){cancel_text="Cancel";}
+    
 	var modal_window=document.createElement("div");
 	modal_window.id="js-modal-window-alert"; modal_window.className="js-modal-window";
 
@@ -364,14 +367,14 @@ function open_js_modal_alert(title_text, text_text, accept_function, cancel_func
 
 	if(typeof(accept_function)!='undefined'){
 		var accept_button=document.createElement('button');
-		accept_button.innerHTML='Ok';
+		accept_button.innerHTML=accept_text;
 		accept_button.onclick=accept_function;
 		modal_dialog.appendChild(accept_button);
 	}
 
 	if(typeof(cancel_function)!='undefined'){
 		var cancel_button=document.createElement('button');
-		cancel_button.innerHTML='Cancel';
+		cancel_button.innerHTML=cancel_text;
 		cancel_button.onclick=cancel_function;
 		modal_dialog.appendChild(cancel_button);
 	}
@@ -638,12 +641,12 @@ var SoundChain={
 
 	play_sound_arr: function(sound_arr, audio_sprt, callback_func, debug_mode){
 		if(this.audio_chain_waiting==true){
-			throw new Error("SoundChain.play_sound_arr is already playing");
+			throw new Error("SoundChain.play_sound_arr "+sound_arr+" is already playing");
 		}else if(typeof(sound_arr)==='undefined' || typeof(audio_sprt)==='undefined' || typeof(callback_func)==='undefined'){
 			throw new Error("SoundChain.play_sound_arr required arguments: sound_arr, audio_sprite, callback_function");
 		}else{
 			if(typeof(debug_mode)!=='undefined') this.debug_mode=debug_mode;
-			if(this.debug_mode) console.log("callback: "+callback_func);	
+			if(this.debug_mode) console.log("callback: "+callback_func);
 			this.sound_array=sound_arr;
 			this.audio_sprite=audio_sprt;
 			this.audio_chain_waiting=true;
@@ -656,13 +659,13 @@ var SoundChain={
 	play_sprite_chain: function(){
 		if(this.callback_func==null) throw new Error("callback not defined");
 		if(this.audio_chain_position>=this.sound_array.length){
-			this.sound_array=undefined;	
+			this.sound_array=undefined;
 			this.audio_chain_waiting=false;
 			this.audio_chain_position=0;
 			this.calls=0;
-			this.callback_func();			
+			this.callback_func();
 		}else{
-			while (this.sound_array[this.audio_chain_position]=="/") {this.audio_chain_position++;} // ignore /	
+			while (this.sound_array[this.audio_chain_position]=="/") {this.audio_chain_position++;} // ignore
 			if(this.debug_mode) console.log("playing: "+this.audio_sprite.audio_obj.currentSrc+" time:"+this.audio_sprite.audio_obj.currentTime+" ended:"+this.audio_sprite.audio_obj.ended+" paused:"+this.audio_sprite.audio_obj.paused+" calls:"+this.calls+" range_id:"+this.sound_array[this.audio_chain_position]+" audio_chain_position:"+this.audio_chain_position+" audio_chain_waiting:"+this.audio_chain_waiting);
 			this.calls++;
 			this.audio_sprite.playSpriteRange(this.sound_array[this.audio_chain_position],this.audio_chain_callback.bind(this))
@@ -672,7 +675,7 @@ var SoundChain={
 	audio_chain_callback: function () {
 		if(this.audio_chain_waiting==true){
 			this.audio_chain_position++;
-			this.play_sprite_chain();		
+			this.play_sprite_chain();
 		}
 	}
 	
