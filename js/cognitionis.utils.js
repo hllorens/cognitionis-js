@@ -898,7 +898,10 @@ DataTableSimple.link_function_id=function (table_config,i,table_row, table_colum
 	if(table_config===undefined || i===undefined) throw "error: no table config or no index";
 	if(!table_config.hasOwnProperty("row_id")) throw "error: row-id undefined";
 	var id_cleaned=table_config.data[i][table_config.row_id].replace(table_config.row_id_prefix+"-","");
-	var text=table_config.data[i][table_column_name];
+	var text=table_column_name;
+    if(table_config.data[i].hasOwnProperty(table_column_name)){
+        text=table_config.data[i][table_column_name];
+    }
 	return '<a href="javascript:void(0)" onclick="'+function_id+'(\''+id_cleaned+'\')">'+text+'</a>'; // substring...
 };
 
@@ -1252,7 +1255,7 @@ var get_reduced_display_name=function(display_name, max_length){
     if(typeof(max_length)=='undefined') max_length=12;
     if(display_name.length>max_length){
         var first_space_index=display_name.indexOf(" ");
-        console.log("first_space_index="+first_space_index);
+        //console.log("first_space_index="+first_space_index);
         if(first_space_index!=-1 && first_space_index<max_length){
             display_name=display_name.substr(0,first_space_index);
         }else{
