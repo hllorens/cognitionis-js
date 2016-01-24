@@ -886,8 +886,9 @@ DataTableSimple.formats.first_12=function (data){  // make this a configurable s
 };
 DataTableSimple.specials.red_incorrect=function (table_config,i,table_row){
 	if(table_config===undefined || i===undefined) return "error!";
-	var text=table_config.data[i].result;
-	if(text=='incorrect'){table_row.style.backgroundColor='red';} //return '<span style="background-color:red">'+text+'</span>';}
+	var text="correcto";
+    if(table_config.data[i].result=="incorrect") text="incorrecto";
+	if(text=='incorrecto'){table_row.style.backgroundColor='red';} //return '<span style="background-color:red">'+text+'</span>';}
 	return text;
 };
 /*DataTableSimple.formats.last_4=function (data,n){
@@ -1155,18 +1156,18 @@ var hamburger_menu=document.getElementById('hamburger_menu');
 var hamburger_menu_content=document.getElementById('hamburger_menu_content');
 var hamburger_close_button=document.getElementById('hamburger_close');
 if(hamburger_close_button!=null){
-	hamburger_close_button.addEventListener('click', function(e) {
+	hamburger_close_button.addEventListener(clickOrTouch, function(e) {
 			e.stopPropagation();
 			hamburger_menu.classList.remove('open');
 		});
-    /* TODO Review this so that if you click inside hamburger it does not close... */
+    /* TODO Review this so that if you clickOrTouch inside hamburger it does not close... */
     var bodytag=document.getElementsByTagName('body')[0];
-    bodytag.addEventListener('click',function(){
+    bodytag.addEventListener(clickOrTouch,function(){
         hamburger_close(); 
     });
 }
 if(hamburger_menu!=null){
- 	hamburger_menu.addEventListener('click', function(e) {
+ 	hamburger_menu.addEventListener(clickOrTouch, function(e) {
             //avoid closing menu when clicking inside
 			e.stopPropagation();
 		});   
@@ -1247,7 +1248,7 @@ var shuffle_array=function(o){
 }
 
 var Asciify={};
-Asciify.latin_map={"á":"a","é":"e","í":"i","ó":"o","ú":"u"};
+Asciify.latin_map={"á":"a","à":"a","é":"e","è":"e","í":"i","ó":"o","ò":"o","ú":"u","ü":"u","ñ":"n","ç":"c"};
 Asciify.asciify=function(str){return str.replace(/[^A-Za-z0-9\[\] ]/g,function(a){return Asciify.latin_map[a]||a})};
 Asciify.isLatin=function(str){return str==Asciify.asciify(str)}
 
@@ -1263,6 +1264,14 @@ var get_reduced_display_name=function(display_name, max_length){
         }
     }
     return display_name
+}
+
+var slugify=function(str){
+	str=Asciify.asciify(str.toLowerCase());
+    str = str.replace(/[^a-z0-9-]/gi, '-').
+    replace(/-+/g, '-').
+    replace(/^-|-$/g, '');
+	return str;
 }
 
 
