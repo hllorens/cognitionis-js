@@ -30,6 +30,8 @@ var JsonLazy={
     }
 }
 
+
+
 /*
 * Load media
 * lazy audio means that if some browsers do not load it inmediatly we let the load process finish when images are loaded
@@ -54,6 +56,13 @@ var ResourceLoader={
 	download_lazy_audio_active : false,
 	debug: false,
 	
+    
+	load_json: function (resource_url){
+        if(!JsonLazy.data.hasOwnProperty(get_resource_name(resource_url))){
+            JsonLazy.load(resource_url, get_resource_name(resource_url), function(){ResourceLoader.log_and_remove_from_not_loaded('load','jsons',resource_url);});
+        }
+	},
+    
 	load_image: function (resource_url){
 		ResourceLoader.ret_media.images[get_resource_name(resource_url)]=new Image();
 		ResourceLoader.ret_media.images[get_resource_name(resource_url)].addEventListener("load", ResourceLoader.log_and_remove_from_not_loaded('load','images',resource_url));
@@ -92,8 +101,7 @@ var ResourceLoader={
 				return; // break so this is still in "not_loaded"
 			}
 			ResourceLoader.ret_media.sounds[get_resource_name(res_url)].removeEventListener(event_name, ResourceLoader.log_and_remove_from_not_loaded);
-		}
-		if(res_type=='images'){
+		}else if(res_type=='images'){
             // nonexistent appear as complete (doesn't work), so we use "width"
 			if (ResourceLoader.ret_media.images[get_resource_name(res_url)]===undefined ||
                 !ResourceLoader.ret_media.images[get_resource_name(res_url)].complete ||     
@@ -105,6 +113,8 @@ var ResourceLoader={
 				return; // break so this is still in "not loaded"
 			}
 			ResourceLoader.ret_media.images[get_resource_name(res_url)].removeEventListener(event_name, ResourceLoader.log_and_remove_from_not_loaded);
+		}else if(res_type=='jsons'){
+			ResourceLoader.ret_media.jsons[get_resource_name(res_url)]=JsonLazy.data[get_resource_name(res_url)];
 		}
 		ResourceLoader.load_progressbar.value+=1;
 		ResourceLoader.not_loaded[res_type].splice(ResourceLoader.not_loaded[res_type].indexOf(res_url),1);
@@ -146,18 +156,19 @@ var ResourceLoader={
         ResourceLoader.check_for_audios_readyState4(); // update audios status        
 		if(ResourceLoader.debug) ResourceLoader.modal_dialog_msg.innerHTML='check_load_status '+ResourceLoader.media_load_time+' - progress: '+ResourceLoader.load_progressbar.value+' - max: '+ResourceLoader.load_progressbar.max
 		// If there is no media to load
-		if(ResourceLoader.num_images==0 && ResourceLoader.num_sounds==0){
+		if(ResourceLoader.num_images==0 && ResourceLoader.num_sounds==0 && ResourceLoader.num_jsons==0){
 			document.body.removeChild(ResourceLoader.modal_load_window);
 			ResourceLoader.callback_on_load_end(); // start the app even if audio is not loaded
 			return;
 		}
-		if (ResourceLoader.load_progressbar.value == ResourceLoader.load_progressbar.max || ( ResourceLoader.load_progressbar.value==ResourceLoader.num_images && ResourceLoader.not_loaded['images'].length==0 && is_iOS ) ) {
+		if (ResourceLoader.load_progressbar.value == ResourceLoader.load_progressbar.max || 
+           ( ResourceLoader.load_progressbar.value==ResourceLoader.num_images+ResourceLoader.num_jsons && ResourceLoader.not_loaded['images'].length==0 && ResourceLoader.not_loaded['jsons'].length==0 && is_iOS ) ) {
 			if(ResourceLoader.load_progressbar.value == ResourceLoader.load_progressbar.max){
 				// If all media loaded
 				document.body.removeChild(ResourceLoader.modal_load_window);
 				ResourceLoader.callback_on_load_end(); // start the app even if audio is not loaded
 				return;
-			}else if(ResourceLoader.load_progressbar.value==ResourceLoader.num_images){
+			}else if(ResourceLoader.load_progressbar.value==ResourceLoader.num_images+ResourceLoader.num_jsons){
 				// If all images loaded, check if lazy audio
 				if(!ResourceLoader.lazy_audio && !ResourceLoader.download_lazy_audio_active){
 					//clearInterval(ResourceLoader.load_interval); done by return+timeout
@@ -218,12 +229,13 @@ var ResourceLoader={
 		}
 	},
 
-	load_media: function (image_arr, sound_arr, callback_function, lazy_audio_option, activate_debug){
+	load_media: function (image_arr, sound_arr, json_arr, callback_function, lazy_audio_option, activate_debug){
 		if(lazy_audio_option===undefined) ResourceLoader.lazy_audio=false;
 		ResourceLoader.debug=false;
 		if(typeof(activate_debug)!=='undefined' && activate_debug==true) ResourceLoader.debug=activate_debug;
 		else ResourceLoader.lazy_audio=lazy_audio_option;
-		ResourceLoader.ret_media={};ResourceLoader.ret_media.sounds=[];ResourceLoader.ret_media.images=[];
+		ResourceLoader.ret_media={};ResourceLoader.ret_media.sounds=[];
+        ResourceLoader.ret_media.images=[];ResourceLoader.ret_media.jsons=[];
 		ResourceLoader.callback_on_load_end=callback_function;
 		ResourceLoader.modal_load_window=document.createElement("div");
 		ResourceLoader.modal_load_window.className="js-modal-window-transp";
@@ -239,10 +251,12 @@ var ResourceLoader={
 		ResourceLoader.load_progressbar=document.createElement("progress");
 		ResourceLoader.num_images=image_arr.length;
 		ResourceLoader.num_sounds=sound_arr.length;
-		ResourceLoader.load_progressbar.value=0; ResourceLoader.load_progressbar.max=ResourceLoader.num_images+ResourceLoader.num_sounds;
+		ResourceLoader.num_jsons=json_arr.length;
+		ResourceLoader.load_progressbar.value=0; ResourceLoader.load_progressbar.max=ResourceLoader.num_images+ResourceLoader.num_sounds+ResourceLoader.num_jsons;
 
-		ResourceLoader.not_loaded['images']= image_arr.slice();
+		ResourceLoader.not_loaded['images']=image_arr.slice();
 		ResourceLoader.not_loaded['sounds']=sound_arr.slice(); // to show in case of error and lazy load (required in iOS)
+		ResourceLoader.not_loaded['jsons']=json_arr.slice();
 		ResourceLoader.download_lazy_audio_active = false;
 
 		ResourceLoader.modal_dialog.appendChild(ResourceLoader.modal_dialog_title);
@@ -262,6 +276,11 @@ var ResourceLoader={
 			//console.log(image_arr);console.log(i+"/"+image_arr.length+"--"+image_arr[i]+" -- "+get_resource_name(image_arr[i]));
 			//ResourceLoader.ret_media.images[get_resource_name(image_arr[i])]=ResourceLoader.load_image(image_arr[i]);
 			ResourceLoader.load_image(image_arr[i]);
+		}
+		for (var i = 0; i < json_arr.length; i++) {
+			//console.log(image_arr);console.log(i+"/"+image_arr.length+"--"+image_arr[i]+" -- "+get_resource_name(image_arr[i]));
+			//ResourceLoader.ret_media.images[get_resource_name(image_arr[i])]=ResourceLoader.load_image(image_arr[i]);
+			ResourceLoader.load_json(json_arr[i]);
 		}
 		//return ResourceLoader.ret_media; //not good for async stuff
 	},
@@ -737,7 +756,7 @@ var AudioLib={
 		if(!AudioLib.sounds_ref.hasOwnProperty(sound_name))
 			throw new Error("AudioLib play_sound_single "+sound_name+" not found");
 		AudioLib.sounds_ref[sound_name].play();
-		setTimeout(function(){AudioLib.check_sound_finished();}, 500);
+		setTimeout(function(){AudioLib.check_sound_finished();}, 200);
 	},
 	check_sound_finished: function(){
 		if(AudioLib.sounds_ref[AudioLib.sound_single].ended){
@@ -746,7 +765,7 @@ var AudioLib={
 			AudioLib.sound_single_callback();
 		}else{
 			if(AudioLib.debug) console.log("AudioLib waiting..."+AudioLib.sound_single+" time: "+AudioLib.sounds_ref[AudioLib.sound_single].currentTime);
-			setTimeout(function(){AudioLib.check_sound_finished();}, 500);
+			setTimeout(function(){AudioLib.check_sound_finished();}, 200);
 		}
 	}
 }
