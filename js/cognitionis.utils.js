@@ -845,7 +845,60 @@ var DataTableSimple = function (table_config){
 			}
 		}
 	}
-	if(table_config.hasOwnProperty('pagination') && isInteger(table_config.pagination) && table_config.pagination > 0){
+	if(table_config.hasOwnProperty('pagination_date') && isInteger(table_config.pagination_date) && table_config.pagination_date > 0){
+		this.insertAdjacentHTML('afterend', '<div id="'+this.id+'-nav"></div>');
+		var tabpagination=document.getElementById(this.id+'-nav');
+		if(table_config.data.length==0) return; // no data, empty table
+        var numPages = 1; 
+        var page_index_and_lenght_arr=[];
+        var curr_page_start=page_index_and_lenght_arr.length;
+        var curr_page_end=curr_page_start;
+        var curr_page_date=table_config.data[0].timestamp.substr(0,10);
+        
+        // configure pages and hide all
+		var tr_rows=document.querySelectorAll('#'+this.id+' tbody tr');
+		for(var i=0;i<tr_rows.length;i++){
+            tr_rows[i].style.display="none";
+            if(curr_page_date!=table_config.data[i].timestamp.substr(0,10) || 
+                (curr_page_end-curr_page_start)>=table_config.pagination_date){
+                curr_page_date=table_config.data[i].timestamp.substr(0,10);
+                page_index_and_lenght_arr.push([curr_page_start,curr_page_end-1]);
+                tabpagination.innerHTML +='<a href="#" rel="'+(page_index_and_lenght_arr.length-1)+'">'+page_index_and_lenght_arr.length+'</a> ';
+                curr_page_start=curr_page_end;
+            }
+            curr_page_end++;
+        }
+        if((curr_page_end-curr_page_start)>0){
+            page_index_and_lenght_arr.push([curr_page_start,curr_page_end]);
+            tabpagination.innerHTML +='<a href="#" rel="'+(page_index_and_lenght_arr.length-1)+'">'+page_index_and_lenght_arr.length+'</a> ';
+        }
+        // add events
+        var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
+		for(var i=0;i<tabpaglinks.length;i++){
+            tabpaglinks[i].addEventListener('click', function(){
+                var tabpaglinks2=this.parentNode.children;
+                for(var i2=0;i2<tabpaglinks2.length;i2++){tabpaglinks2[i2].classList.remove('active-pagination');}
+                this.classList.add('active-pagination');
+                var currPage = this.rel;
+                var startItem = page_index_and_lenght_arr[currPage][0];
+                var endItem = page_index_and_lenght_arr[currPage][1];
+                console.log("yaaaaa"+currPage+" "+startItem+" "+endItem+" ");
+                //console.log(currPage+"  "+startItem+"-"+endItem);
+                // hide all and show range
+                var tr_rows=document.querySelectorAll('#'+this.parentNode.id.replace("-nav","")+' tbody tr');
+                for(var i=0;i<tr_rows.length;i++){tr_rows[i].style.display="none";}
+                for(var i=startItem;i<tr_rows.length;i++){
+                    if(i>endItem) break;tr_rows[i].style.display="";
+                }
+            });
+        }
+        // show page 1
+		for(var i=0;i<tr_rows.length;i++){
+            if(i>page_index_and_lenght_arr[0][1]) break; 
+            tr_rows[i].style.display="";
+        }
+		document.querySelector('#'+this.id+'-nav a').classList.add('active-pagination');
+	}else if(table_config.hasOwnProperty('pagination') && isInteger(table_config.pagination) && table_config.pagination > 0){
 		this.insertAdjacentHTML('afterend', '<div id="'+this.id+'-nav"></div>');
 		var tabpagination=document.getElementById(this.id+'-nav');
 		var rowsShown = table_config.pagination;
@@ -856,17 +909,19 @@ var DataTableSimple = function (table_config){
 		    var pageNum = i + 1;
 		    tabpagination.innerHTML +='<a href="#" rel="'+i+'">'+pageNum+'</a> ';
 		}
+        // hide all and show first by default
 		var tr_rows=document.querySelectorAll('#'+this.id+' tbody tr');
 		for(var i=0;i<tr_rows.length;i++){tr_rows[i].style.display="none";}
 		for(var i=0;i<tr_rows.length;i++){if(i>=rowsShown) break; tr_rows[i].style.display="";}
-		document.querySelector('#'+this.id+'-nav a').classList.add('active');
+		document.querySelector('#'+this.id+'-nav a').classList.add('active-pagination');
 		
+        // configure pages
 		var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
 		for(var i=0;i<tabpaglinks.length;i++){
 			tabpaglinks[i].addEventListener('click', function(){
 				var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
-				for(var i=0;i<tabpaglinks.length;i++){tabpaglinks[i].classList.remove('active');}
-				this.classList.add('active');
+				for(var i=0;i<tabpaglinks.length;i++){tabpaglinks[i].classList.remove('active-pagination');}
+				this.classList.add('active-pagination');
 				var currPage = this.rel;
 				var startItem = currPage * rowsShown;
 				var endItem = startItem + rowsShown;
@@ -877,7 +932,7 @@ var DataTableSimple = function (table_config){
 			});
 		}
 	}
-	
+
 };
 DataTableSimple.formats={};
 DataTableSimple.specials={};
