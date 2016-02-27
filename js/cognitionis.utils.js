@@ -842,11 +842,15 @@ var DataTableSimple = function (table_config){
 				if (table_config.columns[table_column].hasOwnProperty('link_function_id') && table_config.columns[table_column].link_function_id!==undefined){
 					table_cell.innerHTML=DataTableSimple.link_function_id(table_config, i, table_row, table_config.columns[table_column].data, table_config.columns[table_column].link_function_id); 
 				}
+				if (table_config.columns[table_column].hasOwnProperty('link_function_id_button') && table_config.columns[table_column].link_function_id_button!==undefined){
+					table_cell.innerHTML=DataTableSimple.link_function_id_button(table_config, i, table_row, table_config.columns[table_column].data, table_config.columns[table_column].link_function_id_button); 
+				}
 			}
 		}
 	}
 	if(table_config.hasOwnProperty('pagination_date') && isInteger(table_config.pagination_date) && table_config.pagination_date > 0){
-		this.insertAdjacentHTML('afterend', '<div id="'+this.id+'-nav"></div>');
+		this.insertAdjacentHTML('beforebegin', '<div id="'+this.id+'-date"></div>');
+        this.insertAdjacentHTML('afterend', '<div id="'+this.id+'-nav"></div>');
 		var tabpagination=document.getElementById(this.id+'-nav');
 		if(table_config.data.length==0) return; // no data, empty table
         var numPages = 1; 
@@ -862,14 +866,14 @@ var DataTableSimple = function (table_config){
             if(curr_page_date!=table_config.data[i].timestamp.substr(0,10) || 
                 (curr_page_end-curr_page_start)>=table_config.pagination_date){
                 curr_page_date=table_config.data[i].timestamp.substr(0,10);
-                page_index_and_lenght_arr.push([curr_page_start,curr_page_end-1]);
+                page_index_and_lenght_arr.push([curr_page_start,curr_page_end-1,curr_page_date]);
                 tabpagination.innerHTML +='<a href="#" rel="'+(page_index_and_lenght_arr.length-1)+'">'+page_index_and_lenght_arr.length+'</a> ';
                 curr_page_start=curr_page_end;
             }
             curr_page_end++;
         }
         if((curr_page_end-curr_page_start)>0){
-            page_index_and_lenght_arr.push([curr_page_start,curr_page_end]);
+            page_index_and_lenght_arr.push([curr_page_start,curr_page_end,curr_page_date]);
             tabpagination.innerHTML +='<a href="#" rel="'+(page_index_and_lenght_arr.length-1)+'">'+page_index_and_lenght_arr.length+'</a> ';
         }
         // add events
@@ -882,7 +886,7 @@ var DataTableSimple = function (table_config){
                 var currPage = this.rel;
                 var startItem = page_index_and_lenght_arr[currPage][0];
                 var endItem = page_index_and_lenght_arr[currPage][1];
-                console.log("yaaaaa"+currPage+" "+startItem+" "+endItem+" ");
+                //console.log("yaaaaa"+currPage+" "+startItem+" "+endItem+" ");
                 //console.log(currPage+"  "+startItem+"-"+endItem);
                 // hide all and show range
                 var tr_rows=document.querySelectorAll('#'+this.parentNode.id.replace("-nav","")+' tbody tr');
@@ -890,9 +894,11 @@ var DataTableSimple = function (table_config){
                 for(var i=startItem;i<tr_rows.length;i++){
                     if(i>endItem) break;tr_rows[i].style.display="";
                 }
+                document.getElementById(this.parentNode.id.replace("-nav","")+'-date').innerHTML=page_index_and_lenght_arr[currPage][2];
             });
         }
         // show page 1
+        document.getElementById(this.id+'-date').innerHTML=page_index_and_lenght_arr[0][2];
 		for(var i=0;i<tr_rows.length;i++){
             if(i>page_index_and_lenght_arr[0][1]) break; 
             tr_rows[i].style.display="";
@@ -962,7 +968,10 @@ DataTableSimple.specials.red_incorrect=function (table_config,i,table_row){
 	if(table_config===undefined || i===undefined) return "error!";
 	var text="correcto";
     if(table_config.data[i].result=="incorrect") text="incorrecto";
-	if(text=='incorrecto'){table_row.style.backgroundColor='red';} //return '<span style="background-color:red">'+text+'</span>';}
+	if(text=='incorrecto'){
+        table_row.style.color='red';
+        table_row.style.backgroundColor='#ddd';
+    } // return '<span style="background-color:red">'+text+'</span>';}
 	return text;
 };
 /*DataTableSimple.formats.last_4=function (data,n){
@@ -979,7 +988,12 @@ DataTableSimple.link_function_id=function (table_config,i,table_row, table_colum
     }
 	return '<a href="javascript:void(0)" onclick="'+function_id+'(\''+id_cleaned+'\')">'+text+'</a>'; // substring...
 };
-
+DataTableSimple.link_function_id_button=function (table_config,i,table_row, button_text, function_id){
+	if(table_config===undefined || i===undefined) throw "error: no table config or no index";
+	if(!table_config.hasOwnProperty("row_id")) throw "error: row-id undefined";
+	var id_cleaned=table_config.data[i][table_config.row_id].replace(table_config.row_id_prefix+"-","");
+	return '<button style="min-height:24px;" onclick="'+function_id+'(\''+id_cleaned+'\')">'+button_text+'</button>'; // substring...
+};
 
 function select_fill_with_json(data,select_elem, selected){
 	select_elem.innerHTML="";
