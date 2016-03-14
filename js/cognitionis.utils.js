@@ -38,7 +38,7 @@ var JsonLazy={
 *
 */
 var ResourceLoader={
-	MEDIA_LOAD_TIMEOUT:15000, 		// 15 sec + (initial-interval, aprox 1 sec)
+	MEDIA_LOAD_TIMEOUT:15000, 		// 20 sec + (initial-interval, aprox 1 sec)
 	media_load_time:0,			// load time counter
 	media_load_check_status_interval:250, 	// check status every 0.25 sec
 	media_load_check_status_initial_min_splash:1500,
@@ -62,20 +62,21 @@ var ResourceLoader={
             JsonLazy.load(resource_url, get_resource_name(resource_url), function(){ResourceLoader.log_and_remove_from_not_loaded('load','jsons',resource_url);});
         }
 	},
-    
 	load_image: function (resource_url){
 		ResourceLoader.ret_media.images[get_resource_name(resource_url)]=new Image();
 		ResourceLoader.ret_media.images[get_resource_name(resource_url)].addEventListener("load", ResourceLoader.log_and_remove_from_not_loaded('load','images',resource_url));
 		ResourceLoader.ret_media.images[get_resource_name(resource_url)].src = resource_url; // after? load begins as soon as src is set..
 		//return image_object; // not good for async stuff
 	},
-	
 	load_sound: function (resource_url){
 		//var audio_object=new Audio() ;
 		ResourceLoader.ret_media.sounds[get_resource_name(resource_url)]=new Audio();
 		if (!ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].canPlayType 
 			|| ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].canPlayType("audio/mp4")==""){ 
-			return {playclip:function(){throw new Error("Your browser doesn't support HTML5 audio or mp4/m4a");}}
+			return {playclip:function(){
+                alert("Your browser doesn't support HTML5 audio or mp4/m4a");
+                throw new Error("Your browser doesn't support HTML5 audio or mp4/m4a");
+                }}
 		}
 		ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].src=resource_url;
 		ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].addEventListener('canplaythrough', 
@@ -89,8 +90,8 @@ var ResourceLoader={
 				ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].pause();
 				ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].currentTime=0;
 				ResourceLoader.ret_media.sounds[get_resource_name(resource_url)].play();
-			}catch(exception){alert("error playing audio")}
-		}
+			}catch(exception){alert("error playing audio");}
+		};
 		//return audio_object; // not good for async stuff
 	},
 	log_and_remove_from_not_loaded: function(event_name,res_type,res_url){
@@ -120,8 +121,9 @@ var ResourceLoader={
 		ResourceLoader.not_loaded[res_type].splice(ResourceLoader.not_loaded[res_type].indexOf(res_url),1);
 	},
 	download_audio_ios: function(){
-		ResourceLoader.modal_load_window.removeChild(document.getElementById('confirm_div'))
+		ResourceLoader.modal_load_window.removeChild(document.getElementById('confirm_div'));
 		// ResourceLoader.load_interval = , better with timeout + return
+        alert("loading");
 		setTimeout(function() {ResourceLoader.check_load_status()},
 			ResourceLoader.media_load_check_status_interval);
 		for(var i=0;i<ResourceLoader.not_loaded['sounds'].length;i++){
@@ -161,16 +163,18 @@ var ResourceLoader={
 			ResourceLoader.callback_on_load_end(); // start the app even if audio is not loaded
 			return;
 		}
+		// If all loaded, or all but sounds
 		if (ResourceLoader.load_progressbar.value == ResourceLoader.load_progressbar.max || 
-           ( ResourceLoader.load_progressbar.value==ResourceLoader.num_images+ResourceLoader.num_jsons && ResourceLoader.not_loaded['images'].length==0 && ResourceLoader.not_loaded['jsons'].length==0 && is_iOS ) ) {
+           ( ResourceLoader.load_progressbar.value==(ResourceLoader.num_images+ResourceLoader.num_jsons) && ResourceLoader.not_loaded['images'].length==0 && ResourceLoader.not_loaded['jsons'].length==0 && is_iOS) ) {
+               //
 			if(ResourceLoader.load_progressbar.value == ResourceLoader.load_progressbar.max){
 				// If all media loaded
 				document.body.removeChild(ResourceLoader.modal_load_window);
 				ResourceLoader.callback_on_load_end(); // start the app even if audio is not loaded
 				return;
-			}else if(ResourceLoader.load_progressbar.value==ResourceLoader.num_images+ResourceLoader.num_jsons){
+			}else if(ResourceLoader.load_progressbar.value==(ResourceLoader.num_images+ResourceLoader.num_jsons)){
 				// If all images loaded, check if lazy audio
-				if(!ResourceLoader.lazy_audio && !ResourceLoader.download_lazy_audio_active){
+				if(ResourceLoader.lazy_audio && !ResourceLoader.download_lazy_audio_active){
 					//clearInterval(ResourceLoader.load_interval); done by return+timeout
 					ResourceLoader.download_lazy_audio_active=true;
 					ResourceLoader.media_load_time=0;
@@ -193,6 +197,20 @@ var ResourceLoader={
 		}
 		if (ResourceLoader.media_load_time==ResourceLoader.MEDIA_LOAD_TIMEOUT){
 			//clearInterval(ResourceLoader.load_interval); done by return+timeout
+            if( (ResourceLoader.load_progressbar.value==(ResourceLoader.num_images+ResourceLoader.num_jsons) && ResourceLoader.not_loaded['images'].length==0 && ResourceLoader.not_loaded['jsons'].length==0 )
+                && ResourceLoader.lazy_audio && !ResourceLoader.download_lazy_audio_active){
+                //clearInterval(ResourceLoader.load_interval); done by return+timeout
+                //ResourceLoader.download_lazy_audio_active=true;
+                //ResourceLoader.media_load_time=0;
+                //var ios_media_msg="Pula Ok para empezar";
+                //if(user_language=='en-US') ios_media_msg="Click Ok to start";
+                //ResourceLoader.modal_dialog_msg.innerHTML=ios_media_msg+' <button onclick="ResourceLoader.download_audio_ios()">Ok</button> ';
+                //ResourceLoader.modal_load_window.removeChild(document.getElementById('confirm_div'));
+                alert("Carga sonidos aplazada");
+                document.body.removeChild(ResourceLoader.modal_load_window);
+                ResourceLoader.callback_on_load_end();
+                return;
+            }            
 			var err_msg="";
 			for(var i=0;i<ResourceLoader.not_loaded['images'].length;i++){
 				var temp_obj=ResourceLoader.ret_media.images[get_resource_name(ResourceLoader.not_loaded['images'][i])];
@@ -201,9 +219,9 @@ var ResourceLoader={
 			for(var i=0;i<ResourceLoader.not_loaded['sounds'].length;i++){
 				var temp_obj=ResourceLoader.ret_media.sounds[get_resource_name(ResourceLoader.not_loaded['sounds'][i])];
 				err_msg+="<br />Error: "+temp_obj.error+  " - Ready: "+temp_obj.readyState+ " - Network: "+temp_obj.networkState;
-			}		
+			}
 			// re-try by a button to reload url, previously loaded stuff should be cached (fast load)
-			ResourceLoader.modal_dialog_msg.innerHTML='ERROR: Load media timeout. Not loaded ('+(ResourceLoader.not_loaded['images'].length+ResourceLoader.not_loaded['sounds'].length)+'): '+ResourceLoader.not_loaded['images']+'<br/>'+ResourceLoader.not_loaded['sounds']+' <br /> <a href="">retry</a> '+err_msg;
+			ResourceLoader.modal_dialog_msg.innerHTML='ERROR: Load media timeout (lazy='+ResourceLoader.lazy_audio+'). Not loaded ('+(ResourceLoader.not_loaded['images'].length+ResourceLoader.not_loaded['sounds'].length)+'): '+ResourceLoader.not_loaded['images']+'<br/>'+ResourceLoader.not_loaded['sounds']+' <br /> <a href="">retry</a> '+err_msg;
 			return;
 		}
 		// recursively call itself until done	ResourceLoader.load_interval = 
@@ -231,9 +249,9 @@ var ResourceLoader={
 
 	load_media: function (image_arr, sound_arr, json_arr, callback_function, lazy_audio_option, activate_debug){
 		if(lazy_audio_option===undefined) ResourceLoader.lazy_audio=false;
+		else ResourceLoader.lazy_audio=lazy_audio_option;
 		ResourceLoader.debug=false;
 		if(typeof(activate_debug)!=='undefined' && activate_debug==true) ResourceLoader.debug=activate_debug;
-		else ResourceLoader.lazy_audio=lazy_audio_option;
 		ResourceLoader.ret_media={};ResourceLoader.ret_media.sounds=[];
         ResourceLoader.ret_media.images=[];ResourceLoader.ret_media.jsons=[];
 		ResourceLoader.callback_on_load_end=callback_function;
@@ -329,10 +347,14 @@ var ResourceLoader={
 };
 
 // responsive
-var prevent_scrolling=function(){
-    document.body.addEventListener('touchmove', function(event) {
+var avoid_scrolling=function(event){
         event.preventDefault();
-    }, false);
+}
+var prevent_scrolling=function(){
+    document.body.addEventListener('touchmove', avoid_scrolling, false);
+}
+var allow_scrolling=function(){
+    document.body.removeEventListener('touchmove', avoid_scrolling);
 }
 
 // avoid 300ms delay on touch...
@@ -865,8 +887,8 @@ var DataTableSimple = function (table_config){
             tr_rows[i].style.display="none";
             if(curr_page_date!=table_config.data[i].timestamp.substr(0,10) || 
                 (curr_page_end-curr_page_start)>=table_config.pagination_date){
-                curr_page_date=table_config.data[i].timestamp.substr(0,10);
                 page_index_and_lenght_arr.push([curr_page_start,curr_page_end-1,curr_page_date]);
+                curr_page_date=table_config.data[i].timestamp.substr(0,10);
                 tabpagination.innerHTML +='<a href="#" rel="'+(page_index_and_lenght_arr.length-1)+'">'+page_index_and_lenght_arr.length+'</a> ';
                 curr_page_start=curr_page_end;
             }
@@ -880,13 +902,22 @@ var DataTableSimple = function (table_config){
         var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
 		for(var i=0;i<tabpaglinks.length;i++){
             tabpaglinks[i].addEventListener('click', function(){
+                // remove spans "..." for huge
+                var tabpagspans=document.querySelectorAll('#'+this.parentNode.id+' span');
+                for(var i2=0;i2<tabpagspans.length;i2++){this.parentNode.removeChild(tabpagspans[i2]);}
+                
                 var tabpaglinks2=this.parentNode.children;
-                for(var i2=0;i2<tabpaglinks2.length;i2++){tabpaglinks2[i2].classList.remove('active-pagination');}
+                for(var i2=0;i2<tabpaglinks2.length;i2++){
+                    tabpaglinks2[i2].classList.remove('active-pagination');
+                    tabpaglinks2[i2].style.display='';
+                }
                 this.classList.add('active-pagination');
-                var currPage = this.rel;
+                var currPage = Number(this.rel);
+                if (typeof cache_cognitionis_pagination_page !== 'undefined') {
+                    cache_cognitionis_pagination_page=currPage;
+                }
                 var startItem = page_index_and_lenght_arr[currPage][0];
                 var endItem = page_index_and_lenght_arr[currPage][1];
-                //console.log("yaaaaa"+currPage+" "+startItem+" "+endItem+" ");
                 //console.log(currPage+"  "+startItem+"-"+endItem);
                 // hide all and show range
                 var tr_rows=document.querySelectorAll('#'+this.parentNode.id.replace("-nav","")+' tbody tr');
@@ -895,6 +926,27 @@ var DataTableSimple = function (table_config){
                     if(i>endItem) break;tr_rows[i].style.display="";
                 }
                 document.getElementById(this.parentNode.id.replace("-nav","")+'-date').innerHTML=page_index_and_lenght_arr[currPage][2];
+                // handle huge
+                if(tabpaglinks2.length>10){
+                    if(currPage<tabpaglinks2.length-5){
+                        //alert("smaller n-5. cur="+currPage+" starthide"+(currPage+2)+" endhide"+((tabpaglinks2.length)-2));
+                        var newItem2 = document.createElement('span');
+                        var textnode2 = document.createTextNode('...');
+                        newItem2.appendChild(textnode2);
+                        var min_start=Math.max(2,currPage);
+                        for(var i2=min_start+3;i2<tabpaglinks2.length-2;i2++){tabpaglinks2[i2].style.display='none';}
+                        this.parentNode.insertBefore(newItem2, this.parentNode.childNodes[this.parentNode.childNodes.length-4]);
+                    }
+                    if(currPage>4){
+                        //alert("greater 4. cur="+currPage+" starthide"+(2)+" endhide"+(currPage-2));
+                        var newItem = document.createElement('span');
+                        var textnode = document.createTextNode('...');
+                        newItem.appendChild(textnode);
+                        var max_end=Math.min(tabpaglinks2.length-3,currPage);
+                        for(var i2=2;i2<max_end-2;i2++){tabpaglinks2[i2].style.display='none';}
+                        this.parentNode.insertBefore(newItem, this.parentNode.childNodes[3]);
+                    }
+                }
             });
         }
         // show page 1
@@ -904,6 +956,15 @@ var DataTableSimple = function (table_config){
             tr_rows[i].style.display="";
         }
 		document.querySelector('#'+this.id+'-nav a').classList.add('active-pagination');
+        // handle huge
+        if(page_index_and_lenght_arr.length>10){
+            var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
+            for(var i=5;i<(tabpaglinks.length-2);i++){tabpaglinks[i].style.display='none';}
+            var newItem = document.createElement('span');
+            var textnode = document.createTextNode('...');  // Create a text node
+            newItem.appendChild(textnode); 
+            tabpagination.insertBefore(newItem, tabpagination.childNodes[tabpagination.childNodes.length-4]);
+        }
 	}else if(table_config.hasOwnProperty('pagination') && isInteger(table_config.pagination) && table_config.pagination > 0){
 		this.insertAdjacentHTML('afterend', '<div id="'+this.id+'-nav"></div>');
 		var tabpagination=document.getElementById(this.id+'-nav');
@@ -915,28 +976,68 @@ var DataTableSimple = function (table_config){
 		    var pageNum = i + 1;
 		    tabpagination.innerHTML +='<a href="#" rel="'+i+'">'+pageNum+'</a> ';
 		}
-        // hide all and show first by default
-		var tr_rows=document.querySelectorAll('#'+this.id+' tbody tr');
-		for(var i=0;i<tr_rows.length;i++){tr_rows[i].style.display="none";}
-		for(var i=0;i<tr_rows.length;i++){if(i>=rowsShown) break; tr_rows[i].style.display="";}
-		document.querySelector('#'+this.id+'-nav a').classList.add('active-pagination');
 		
         // configure pages
 		var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
 		for(var i=0;i<tabpaglinks.length;i++){
 			tabpaglinks[i].addEventListener('click', function(){
-				var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
-				for(var i=0;i<tabpaglinks.length;i++){tabpaglinks[i].classList.remove('active-pagination');}
-				this.classList.add('active-pagination');
-				var currPage = this.rel;
+                // remove spans "..." for huge
+                var tabpagspans=document.querySelectorAll('#'+this.parentNode.id+' span');
+                for(var i2=0;i2<tabpagspans.length;i2++){this.parentNode.removeChild(tabpagspans[i2]);}
+                
+                var tabpaglinks2=this.parentNode.children;
+                for(var i2=0;i2<tabpaglinks2.length;i2++){
+                    tabpaglinks2[i2].classList.remove('active-pagination');
+                    tabpaglinks2[i2].style.display='';
+                }
+                this.classList.add('active-pagination');
+                var currPage = Number(this.rel);
+                if (typeof cache_cognitionis_pagination_page !== 'undefined') {
+                    cache_cognitionis_pagination_page=currPage;
+                }
+
 				var startItem = currPage * rowsShown;
 				var endItem = startItem + rowsShown;
 				//console.log(currPage+"  "+startItem+"-"+endItem);
 				var tr_rows=document.querySelectorAll('#'+this.parentNode.id.replace("-nav","")+' tbody tr');
 				for(var i=0;i<tr_rows.length;i++){tr_rows[i].style.display="none";}
 				for(var i=startItem;i<tr_rows.length;i++){if(i>=endItem) break; tr_rows[i].style.display="";}
+                if(tabpaglinks2.length>10){
+                    if(currPage<tabpaglinks2.length-5){
+                        //alert("smaller n-5. cur="+currPage+" starthide"+(currPage+2)+" endhide"+((tabpaglinks2.length)-2));
+                        var newItem2 = document.createElement('span');
+                        var textnode2 = document.createTextNode('...');
+                        newItem2.appendChild(textnode2);
+                        var min_start=Math.max(2,currPage);
+                        for(var i2=min_start+3;i2<tabpaglinks2.length-2;i2++){tabpaglinks2[i2].style.display='none';}
+                        this.parentNode.insertBefore(newItem2, this.parentNode.childNodes[this.parentNode.childNodes.length-4]);
+                    }
+                    if(currPage>4){
+                        //alert("greater 4. cur="+currPage+" starthide"+(2)+" endhide"+(currPage-2));
+                        var newItem = document.createElement('span');
+                        var textnode = document.createTextNode('...');
+                        newItem.appendChild(textnode);
+                        var max_end=Math.min(tabpaglinks2.length-3,currPage);
+                        for(var i2=2;i2<max_end-2;i2++){tabpaglinks2[i2].style.display='none';}
+                        this.parentNode.insertBefore(newItem, this.parentNode.childNodes[3]);
+                    }
+                }
 			});
 		}
+        // hide all and show first by default
+		var tr_rows=document.querySelectorAll('#'+this.id+' tbody tr');
+		for(var i=0;i<tr_rows.length;i++){tr_rows[i].style.display="none";}
+		for(var i=0;i<tr_rows.length;i++){if(i>=rowsShown) break; tr_rows[i].style.display="";}
+		document.querySelector('#'+this.id+'-nav a').classList.add('active-pagination');
+        // handle huge
+        if(tabpaglinks.length>10){
+            var tabpaglinks=document.querySelectorAll('#'+this.id+'-nav a');
+            for(var i=5;i<(tabpaglinks.length-2);i++){tabpaglinks[i].style.display='none';}
+            var newItem = document.createElement('span');
+            var textnode = document.createTextNode('...');  // Create a text node
+            newItem.appendChild(textnode); 
+            tabpagination.insertBefore(newItem, tabpagination.childNodes[tabpagination.childNodes.length-4]);
+        }
 	}
 
 };
@@ -970,7 +1071,7 @@ DataTableSimple.specials.red_incorrect=function (table_config,i,table_row){
     if(table_config.data[i].result=="incorrect") text="incorrecto";
 	if(text=='incorrecto'){
         table_row.style.color='red';
-        table_row.style.backgroundColor='#ddd';
+        //table_row.style.backgroundColor='#ddd';
     } // return '<span style="background-color:red">'+text+'</span>';}
 	return text;
 };
@@ -1092,16 +1193,25 @@ var get_timestamp_str=function(){
 	return timestamp_str;
 }
 
-var calculateAge=function (dateString) {
-    var today = new Date();
+var calculateAge=function (dateString,dateRef) {
+    if(typeof(dateRef)=='undefined') dateRef = new Date();
+    else dateRef=new Date(dateRef.substring(0,10));
     var birthDate = new Date(dateString);
-    var age = today.getFullYear() - birthDate.getFullYear();
-    var m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    var age = dateRef.getFullYear() - birthDate.getFullYear();
+    var m = dateRef.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && dateRef.getDate() < birthDate.getDate())) {
         age--;
     }
     return age;
 }
+
+var calculateAgeGeneration=function (dateString,dateRef) {
+    if(typeof(dateRef)=='undefined') dateRef = new Date();
+    else dateRef=new Date(dateRef.substring(0,10));
+    var birthDate = new Date(dateString);
+    return (dateRef.getFullYear() - birthDate.getFullYear());
+}
+
 
 //window.addEventListener("navigate", function(event,data){alert("navigate!");preventBack(event,data)});
 //window.addEventListener('android:back',function(e) {alert("android back"); e.preventDefault();});
