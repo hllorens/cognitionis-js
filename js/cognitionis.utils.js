@@ -19,6 +19,13 @@ function is_local(){
 	return false;
 }
 
+function check_internet_access_with_img_url(img_url, callback_true, callback_false){
+    //return navigator.onLine; // unsafe
+    var i = new Image();
+    i.onload = callback_true;
+    i.onerror = callback_false;
+    i.src = img_url+'?d=' + escape(Date()); // escape(Date()) to avoid cache
+}
 
 
 // Audio types. Best choice: m4a (mp4)
