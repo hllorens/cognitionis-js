@@ -6,12 +6,20 @@ var monthNames=[ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", 
 var user_language=window.navigator.userLanguage || window.navigator.language;
 var is_iOS = ( navigator.userAgent.match(/(iPad|iPhone|iPod)/g) ? true : false );
 function is_cordova(){
-	if( navigator.userAgent.match(/(i(os|phone|pod|pad|emobile)|android|blackberry)/i)
-		&& /^file:\/{3}[^\/]/i.test(window.location.href) ){
+	if( navigator.userAgent.match(/(i(os|phone|pod|pad|emobile)|android|blackberry)/i) &&
+		 /^file:\/{3}[^\/]/i.test(window.location.href) ){
 		return true;
 	}
 	return false;
 }
+function is_local(){
+	if( /^file:\/{3}[^\/]/i.test(window.location.href) ){
+		return true;
+	}
+	return false;
+}
+
+
 
 // Audio types. Best choice: m4a (mp4)
 var html5_audiotypes={"mp3": "audio/mpeg","mp4": "audio/mp4","m4a": "audio/mp4",
@@ -174,11 +182,11 @@ var ResourceLoader={
 				return;
 			}else if(ResourceLoader.load_progressbar.value==(ResourceLoader.num_images+ResourceLoader.num_jsons)){
 				// If all images loaded, check if lazy audio
-				if(ResourceLoader.lazy_audio && !ResourceLoader.download_lazy_audio_active){
+				if(!ResourceLoader.lazy_audio && !ResourceLoader.download_lazy_audio_active){
 					//clearInterval(ResourceLoader.load_interval); done by return+timeout
 					ResourceLoader.download_lazy_audio_active=true;
 					ResourceLoader.media_load_time=0;
-					var ios_media_msg="Pula Ok para empezar";
+					var ios_media_msg="Pulsa Ok para empezar";
 					if(user_language=='en-US') ios_media_msg="Click Ok to start";
 					ResourceLoader.modal_dialog_msg.innerHTML=ios_media_msg+' <button onclick="ResourceLoader.download_audio_ios()">Ok</button> ';
 					return;
@@ -202,7 +210,7 @@ var ResourceLoader={
                 //clearInterval(ResourceLoader.load_interval); done by return+timeout
                 //ResourceLoader.download_lazy_audio_active=true;
                 //ResourceLoader.media_load_time=0;
-                //var ios_media_msg="Pula Ok para empezar";
+                //var ios_media_msg="Pulsa Ok para empezar";
                 //if(user_language=='en-US') ios_media_msg="Click Ok to start";
                 //ResourceLoader.modal_dialog_msg.innerHTML=ios_media_msg+' <button onclick="ResourceLoader.download_audio_ios()">Ok</button> ';
                 //ResourceLoader.modal_load_window.removeChild(document.getElementById('confirm_div'));
@@ -1306,7 +1314,14 @@ function ajax_request(url, callback, type, method, data) {
 		if (xhr.readyState ===4) { // XMLHttpRequest.DONE value
 			if (xhr.status === 200) {
 	            if(type=="json"){
-	                callback(JSON.parse(xhr.responseText));
+                    var ret_json={};
+                    try {
+                        ret_json=JSON.parse(xhr.responseText);
+                    }
+                    catch(err) {
+                        ret_json.error=err.message+" -- "+xhr.responseText;
+                    }
+	                callback(ret_json);
 				}else{
 	                callback(xhr.responseText);
 				}
@@ -1321,6 +1336,17 @@ function ajax_request(url, callback, type, method, data) {
 }
 
 function ajax_request_json(url, callback) {ajax_request(url,callback,"json");}
+
+function jsonp_request(url) {
+	if(url.indexOf('jsoncallback')==-1){alert("JSONP "+url+" no jsoncallback defined");}
+    else{
+        //alert("appending "+url);
+        var script_element = document.createElement('script');
+        script_element.src = url;
+        document.getElementsByTagName('head')[0].appendChild(script_element);
+    }
+}
+
 
 // TODO for sending utf-8 post use "application/json; charset=UTF-8"
 // or if not json "application/octet-stream; charset=UTF-8"
