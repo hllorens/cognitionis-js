@@ -1342,7 +1342,61 @@ function ajax_request(url, callback, type, method, data) {
 	else xhr.send()
 }
 
+
+function ajax_CORS_request(url, callback, type, method, data) {
+	if(typeof(method)==="undefined") method = "GET";
+	if(typeof(type)==="undefined") type = "text";
+    var xhr = new XMLHttpRequest();
+    if(method=="GET" && is_local()){
+        var url_append_symbol='?';
+        if(url.indexOf('?')!=-1) url_append_symbol='&';
+        url=url+url_append_symbol+'allow_null_CORS=true';
+    }
+    if ("withCredentials" in xhr) {
+        //alert("cors supported, with credentials "+xhr.withCredentials); // false by default
+        xhr.open(method, url, true);
+    } else if (typeof XDomainRequest != "undefined") {
+        xhr = new XDomainRequest(); // XDomainRequest for IE
+        xhr.open(method, url);
+    } else {
+        alert("ERROR: Ajax with CORS is not supported by your browser");
+    }
+    // we presupose that any time we do POST ajax is with urlencoded data
+    if(method=="POST"){
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        if(is_local()){
+            var url_append_symbol='&';
+            data=data+url_append_symbol+'allow_null_CORS=true';
+        }
+    }
+	xhr.responsetype=type;
+	xhr.onreadystatechange = function(){
+		if (xhr.readyState ===4) { // XMLHttpRequest.DONE value
+			if (xhr.status === 200) {
+	            if(type=="json"){
+                    var ret_json={};
+                    try {
+                        ret_json=JSON.parse(xhr.responseText);
+                    }
+                    catch(err) {
+                        ret_json.error=err.message+" -- "+xhr.responseText;
+                    }
+	                callback(ret_json);
+				}else{
+	                callback(xhr.responseText);
+				}
+			} else {
+				alert("AJAX ERROR: "+xhr.status+"  "+JSON.stringify(xhr));
+			}
+		}
+	}
+    xhr.withCredentials = true;
+	if(method=="POST" && typeof(data)!='undefined') xhr.send(data)
+	else xhr.send()
+}
+
 function ajax_request_json(url, callback) {ajax_request(url,callback,"json");}
+function ajax_CORS_request_json(url, callback) {ajax_CORS_request(url,callback,"json");}
 
 function jsonp_request(url) {
 	if(url.indexOf('jsoncallback')==-1){alert("JSONP "+url+" no jsoncallback defined");}
