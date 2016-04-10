@@ -56,7 +56,7 @@
 
 .js-modal-img {
 	width: 100%;
-	margin-top: 10%;
+	margin-top: 250px;
 	text-align:center;
 }
 
@@ -95,7 +95,10 @@ td, th { padding: .3em;  }
 /* HAMBURGER */
 a#hamburger_icon svg {
 	fill: #000;
-	width: 40px;
+	width: 46px;
+}
+#hamburger_icon{
+	margin: 0 0 0 10px;
 }
 #hamburger_icon:hover{
 	cursor:pointer;
