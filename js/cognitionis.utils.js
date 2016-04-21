@@ -19,11 +19,14 @@ function is_local(){
 	return false;
 }
 
-function check_internet_access_with_img_url(img_url, callback_true, callback_false){
+function check_internet_access_with_img_url(img_url, callback_true, callback_false,callback_arg){
     //return navigator.onLine; // unsafe
     var i = new Image();
-    i.onload = callback_true;
-    i.onerror = callback_false;
+    if(typeof(callback_arg)=='undefined'){i.onload = callback_true;i.onerror = callback_false;}
+    else{
+        i.onload = function () {callback_true(callback_arg);}.bind(callback_true,callback_arg);
+        i.onerror = function () {callback_false(callback_arg);}.bind(callback_false,callback_arg);
+    }    
     i.src = img_url+'?d=' + escape(Date()); // escape(Date()) to avoid cache
 }
 
@@ -333,7 +336,7 @@ var ResourceLoader={
 		ResourceLoader.load_progressbar=document.createElement("progress");
 		ResourceLoader.num_images=0; ResourceLoader.num_sounds=ResourceLoader.not_loaded['sounds'].length;
 		ResourceLoader.load_progressbar.value=0; ResourceLoader.load_progressbar.max=ResourceLoader.num_images+ResourceLoader.num_sounds;
-
+        ResourceLoader.media_load_time=0;
 		ResourceLoader.modal_dialog.appendChild(ResourceLoader.modal_dialog_title);
 		ResourceLoader.modal_dialog.appendChild(ResourceLoader.load_progressbar);
 		ResourceLoader.modal_dialog.appendChild(ResourceLoader.modal_dialog_msg);
@@ -1343,7 +1346,7 @@ function ajax_request(url, callback, type, method, data) {
 }
 
 
-function ajax_CORS_request(url, callback, type, method, data) {
+function ajax_CORS_request(url, callback, type, method, data, callback_arg) {
 	if(typeof(method)==="undefined") method = "GET";
 	if(typeof(type)==="undefined") type = "text";
     var xhr = new XMLHttpRequest();
@@ -1370,6 +1373,7 @@ function ajax_CORS_request(url, callback, type, method, data) {
         }
     }
 	xhr.responsetype=type;
+    xhr.callback_arg=callback_arg;
 	xhr.onreadystatechange = function(){
 		if (xhr.readyState ===4) { // XMLHttpRequest.DONE value
 			if (xhr.status === 200) {
@@ -1381,6 +1385,7 @@ function ajax_CORS_request(url, callback, type, method, data) {
                     catch(err) {
                         ret_json.error=err.message+" -- "+xhr.responseText;
                     }
+                    ret_json.callback_arg=xhr.callback_arg;
 	                callback(ret_json);
 				}else{
 	                callback(xhr.responseText);
