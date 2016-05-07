@@ -943,7 +943,7 @@ var DataTableSimple = function (table_config){
                 for(var i=startItem;i<tr_rows.length;i++){
                     if(i>endItem) break;tr_rows[i].style.display="";
                 }
-                document.getElementById(this.parentNode.id.replace("-nav","")+'-date').innerHTML=page_index_and_lenght_arr[currPage][2];
+                document.getElementById(this.parentNode.id.replace("-nav","")+'-date').innerHTML=yyyymmdd2ddmmyyy(page_index_and_lenght_arr[currPage][2]);
                 // handle huge
                 if(tabpaglinks2.length>10){
                     if(currPage<tabpaglinks2.length-5){
@@ -968,7 +968,7 @@ var DataTableSimple = function (table_config){
             });
         }
         // show page 1
-        document.getElementById(this.id+'-date').innerHTML=page_index_and_lenght_arr[0][2];
+        document.getElementById(this.id+'-date').innerHTML=yyyymmdd2ddmmyyy(page_index_and_lenght_arr[0][2]);
 		for(var i=0;i<tr_rows.length;i++){
             if(i>page_index_and_lenght_arr[0][1]) break; 
             tr_rows[i].style.display="";
@@ -1211,6 +1211,10 @@ var get_timestamp_str=function(){
 	return timestamp_str;
 }
 
+var yyyymmdd2ddmmyyy=function(date_str){
+    return date_str.substr(8,2)+'-'+date_str.substr(5,2)+'-'+date_str.substr(0,4);
+}
+
 var calculateAge=function (dateString,dateRef) {
     if(typeof(dateRef)=='undefined') dateRef = new Date();
     else dateRef=new Date(dateRef.substring(0,10));
@@ -1373,7 +1377,6 @@ function ajax_CORS_request(url, callback, type, method, data, callback_arg) {
         }
     }
 	xhr.responsetype=type;
-    xhr.callback_arg=callback_arg;
 	xhr.onreadystatechange = function(){
 		if (xhr.readyState ===4) { // XMLHttpRequest.DONE value
 			if (xhr.status === 200) {
@@ -1385,7 +1388,7 @@ function ajax_CORS_request(url, callback, type, method, data, callback_arg) {
                     catch(err) {
                         ret_json.error=err.message+" -- "+xhr.responseText;
                     }
-                    ret_json.callback_arg=xhr.callback_arg;
+                    ret_json.callback_arg=callback_arg;
 	                callback(ret_json);
 				}else{
 	                callback(xhr.responseText);
