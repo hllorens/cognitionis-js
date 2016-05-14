@@ -56,7 +56,7 @@ var JsonLazy={
 *
 */
 var ResourceLoader={
-	MEDIA_LOAD_TIMEOUT:15000, 		// 20 sec + (initial-interval, aprox 1 sec)
+	MEDIA_LOAD_TIMEOUT:30000, 		// 30 sec + (initial-interval, aprox 1 sec)
 	media_load_time:0,			// load time counter
 	media_load_check_status_interval:250, 	// check status every 0.25 sec
 	media_load_check_status_initial_min_splash:1500,
@@ -224,7 +224,7 @@ var ResourceLoader={
                 //if(user_language=='en-US') ios_media_msg="Click Ok to start";
                 //ResourceLoader.modal_dialog_msg.innerHTML=ios_media_msg+' <button onclick="ResourceLoader.download_audio_ios()">Ok</button> ';
                 //ResourceLoader.modal_load_window.removeChild(document.getElementById('confirm_div'));
-                alert("Carga sonidos aplazada");
+                alert("Carga sonidos aplazada (img y json cargados)");
                 document.body.removeChild(ResourceLoader.modal_load_window);
                 ResourceLoader.callback_on_load_end();
                 return;
@@ -1137,8 +1137,10 @@ function selectorExistsInCSS(styleSheetName, selector) {
     // Check the stylesheet for the specified selector
     var styleSheet = document.styleSheets[idx];
     var cssRules = styleSheet.rules ? styleSheet.rules : styleSheet.cssRules;
-    for (var i = 0; i < cssRules.length; ++i) {
-        if(cssRules[i].selectorText == selector) return true;
+    if(cssRules!=null){
+        for (var i = 0; i < cssRules.length; ++i) {
+            if(cssRules[i].selectorText == selector) return true;
+        }
     }
     return false;
 }
@@ -1155,8 +1157,10 @@ function getAllCSSselectorsMatching(styleSheetName, reg_ex){
     // Check the stylesheet for the specified selector
     var styleSheet = document.styleSheets[idx];
     var cssRules = styleSheet.rules ? styleSheet.rules : styleSheet.cssRules;
-    for (var i = 0; i < cssRules.length; ++i) {
-        if(reg_ex.test(cssRules[i].selectorText)) matched_selectors.push(cssRules[i].selectorText);
+    if(cssRules!=null){
+        for (var i = 0; i < cssRules.length; ++i) {
+            if(reg_ex.test(cssRules[i].selectorText)) matched_selectors.push(cssRules[i].selectorText);
+        }
     }
     return matched_selectors;
     
@@ -1527,11 +1531,18 @@ var random_array=function(array, num_elems, allow_repetition){
 	var repetition=false;
 	if(typeof(allow_repetition)!=='undefined' && allow_repetition==true)
 		repetition=true;
+    if(array.length==0 || (array.length<num_elems && repetition==false)){
+		throw new Error("cannot create a random array of "+num_elems+" elems from an array of "+array.length+" elems ("+repetition+")");
+    }
+	var way_out_of_infinite_loop=0;
 	do{
 		item = remaining_array[Math.floor(Math.random()*remaining_array.length)];
 		if(items.indexOf(item)!=-1 && !repetition){continue;}
 		else{items.push(item);}
-	}while(items.length<num_elems);
+		way_out_of_infinite_loop++;
+	}while(items.length<num_elems  && way_out_of_infinite_loop!=10000);
+	if(way_out_of_infinite_loop==10000)
+		throw new Error("cognitionis random_array,  loop>10000");
 	return items;
 }
 
