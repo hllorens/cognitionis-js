@@ -752,6 +752,8 @@ var AudioLib={
 	sound_arr_ended: true,
 	sound_arr_pos: 0,
 	sound_arr_callback: undefined,
+	sound_arr_callback_retardation: 300,
+	sound_single_check_freq: 100,
 	init: function(sounds_ref, activate_debug){
 	 	if(typeof(sounds_ref)=='undefined')
 				throw new Error("AudioLib sounds_ref must be defined");
@@ -781,8 +783,7 @@ var AudioLib={
 			AudioLib.sound_arr=undefined;
 			AudioLib.sound_arr_pos=0;
 			AudioLib.sound_arr_ended=true;
-			AudioLib.sound_arr_callback();
-			AudioLib.sound_arr_callback=undefined;
+            setTimeout(function(){AudioLib.sound_arr_callback();AudioLib.sound_arr_callback=undefined;}, AudioLib.sound_arr_callback_retardation);
 		}
 	},
 	play_sound_single: function(sound_name,callback){
@@ -796,7 +797,7 @@ var AudioLib={
 		if(!AudioLib.sounds_ref.hasOwnProperty(sound_name))
 			throw new Error("AudioLib play_sound_single "+sound_name+" not found");
 		AudioLib.sounds_ref[sound_name].play();
-		setTimeout(function(){AudioLib.check_sound_finished();}, 200);
+		setTimeout(function(){AudioLib.check_sound_finished();}, AudioLib.sound_single_check_freq);
 	},
 	check_sound_finished: function(){
 		if(AudioLib.sounds_ref[AudioLib.sound_single].ended){
@@ -805,7 +806,7 @@ var AudioLib={
 			AudioLib.sound_single_callback();
 		}else{
 			if(AudioLib.debug) console.log("AudioLib waiting..."+AudioLib.sound_single+" time: "+AudioLib.sounds_ref[AudioLib.sound_single].currentTime);
-			setTimeout(function(){AudioLib.check_sound_finished();}, 200);
+			setTimeout(function(){AudioLib.check_sound_finished();}, AudioLib.sound_single_check_freq);
 		}
 	}
 }
