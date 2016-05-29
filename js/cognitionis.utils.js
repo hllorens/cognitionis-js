@@ -752,7 +752,7 @@ var AudioLib={
 	sound_arr_ended: true,
 	sound_arr_pos: 0,
 	sound_arr_callback: undefined,
-	sound_arr_callback_retardation: 300,
+	sound_arr_callback_retardation: 500,
 	sound_single_check_freq: 100,
 	init: function(sounds_ref, activate_debug){
 	 	if(typeof(sounds_ref)=='undefined')
@@ -778,7 +778,7 @@ var AudioLib={
 			throw new Error("AudioLib trying to play_sound_arr while another is still playing");
 		AudioLib.sound_arr_pos++;
 		if(AudioLib.sound_arr_pos < AudioLib.sound_arr.length){
-			AudioLib.play_sound_single(AudioLib.sound_arr[AudioLib.sound_arr_pos],AudioLib.play_sound_arr_next);
+            setTimeout(function(){AudioLib.play_sound_single(AudioLib.sound_arr[AudioLib.sound_arr_pos],AudioLib.play_sound_arr_next);}, AudioLib.sound_arr_callback_retardation);
 		}else{
 			AudioLib.sound_arr=undefined;
 			AudioLib.sound_arr_pos=0;
