@@ -1393,7 +1393,9 @@ function ajax_CORS_request(url, callback, type, method, data, callback_arg) {
                     catch(err) {
                         ret_json.error=err.message+" -- "+xhr.responseText;
                     }
-                    ret_json.callback_arg=callback_arg;
+                    if(typeof(callback_arg)=='function'){
+                        ret_json.callback_arg=callback_arg;
+                    }
 	                callback(ret_json);
 				}else{
 	                callback(xhr.responseText);
