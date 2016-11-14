@@ -381,6 +381,19 @@ var clickOrTouch = (('ontouchend' in window)) ? 'touchend' : 'click';
              // do something
           });*/
 
+// add controlled click effect on click
+var add_click_fancy=function(id,f,delay){
+    document.getElementById(id).addEventListener(clickOrTouch,function(event){click_fancy(event,f,delay);});
+}
+
+var click_fancy=function(event,f,delay){
+    if(typeof(delay)==='undefined')
+        delay=150; // default delay
+    if(typeof(f)==='undefined' || typeof(f) !== 'function' )
+        throw new Error('cognitionis click_fancy: f is undefined or not a function');
+    event.stopPropagation(); //Make all touch events stop
+    setTimeout(function(){f();},delay);
+}
 
 
 
