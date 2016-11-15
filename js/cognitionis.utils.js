@@ -460,7 +460,7 @@ function open_js_modal_alert(title_text, text_text, accept_function, cancel_func
 
 var open_js_modal_content=function(html_content){  
 	var modal_window=document.createElement("div")
-	modal_window.id="js-modal-window"; modal_window.className="js-modal-window"
+	modal_window.id="js-modal-window-alert"; modal_window.className="js-modal-window"
 	modal_window.innerHTML=html_content;
 	document.body.appendChild(modal_window);
 	return modal_window;
@@ -468,7 +468,7 @@ var open_js_modal_content=function(html_content){
 
 function open_js_modal_content_accept(html_content){
 	var modal_window=document.createElement("div")
-	modal_window.id="js-modal-window"; modal_window.className="js-modal-window"
+	modal_window.id="js-modal-window-alert"; modal_window.className="js-modal-window"
 	var modal_dialog=document.createElement("div");
 	modal_dialog.className="js-modal-dialog";
 	modal_dialog.innerHTML=html_content;
@@ -477,7 +477,7 @@ function open_js_modal_content_accept(html_content){
 	close_elem.innerHTML="Ok"
 	close_elem.href="javascript:void(0)"
 	close_elem.onclick=function (){
-		var elem_to_remove=document.getElementById("js-modal-window")
+		var elem_to_remove=document.getElementById("js-modal-window-alert")
 		elem_to_remove.parentNode.removeChild(elem_to_remove)
 	}
 
@@ -489,7 +489,7 @@ function open_js_modal_content_accept(html_content){
 
 
 var remove_modal=function (id2remove){
-	var id_remove='js-modal-window';
+	var id_remove='js-modal-window-alert';
 	if(id2remove!==undefined) id_remove=id2remove;
 	var modal_window=document.getElementById(id_remove);
 	if(modal_window!=null) modal_window.parentNode.removeChild(modal_window);
@@ -497,6 +497,11 @@ var remove_modal=function (id2remove){
 
 var open_js_modal_content_timeout=function(html_content, timeout_ms){
 	open_js_modal_content(html_content);
+	setTimeout(function(){remove_modal();},timeout_ms);
+}
+
+var open_js_modal_alert_timeout=function(title,content, timeout_ms){
+	open_js_modal_alert(title,content);
 	setTimeout(function(){remove_modal();},timeout_ms);
 }
 
@@ -602,15 +607,16 @@ ActivityTimer.prototype.reset=function (){
 
 
 
-/// Audio Sprite //////////////////////
+/// Audio Sprite //////////////////////////////////////////////
+// Basic Object to load a sprite and play a sound in a position of the sprite
+// audio_object: audio file
+// sprite_ref: json describing positions of the sprite with ids
 var AudioSprite=function(audio_object, sprite_ref, activate_debug){
 	this.audio_obj=audio_object; 	// either created in js or got from DOM
 	this.sound_range_ref=sprite_ref;	// index of sounds in sprite (as ranges)
 	this.currentSpriteRange = {}; 	// current sprite being played
 	this.range_ended=true;
 	this.seeked_and_paused_intents=0;
-	//this.audio_obj.removeEventListener('timeupdate', this.onAudioSpriteTimeUpdate, false); // for safety
-	//this.audio_obj.addEventListener('timeupdate', this.onAudioSpriteTimeUpdate.bind(this), false);
 	this.debug=false;
 	if(typeof(activate_debug)!=='undefined' && activate_debug==true) this.debug=activate_debug;
 }
@@ -642,30 +648,6 @@ AudioSprite.prototype.playSpriteRange = function(range_id,callback_function) {
 		if(this.audio_obj.hasOwnProperty("callback_on_end") && typeof(this.audio_obj.callback_on_end) === 'function' ) this.audio_obj.callback_on_end();
 	}
 };
-/*AudioSprite.prototype.play_safe=function(seek_position){ // wait until paused and not seekeing
-	// PROBLEM, on mobiles with data-conntection (not wifi), audio won't start to seek until play() event
-	if(this.audio_obj.paused && !this.audio_obj.seekeing && 
-		Math.abs(this.audio_obj.currentTime-seek_position)<AudioSprite.FLOAT_THRESHOLD){
-			setTimeout(function(){this.audioSpritePositionCheck();}.bind(this),AudioSprite.CHECK_SOUND_POSITION_TIMEOUT);
-			this.audio_obj.play();
-		}
-	else setTimeout(function(){ // more efficien could be trying to use events... but complicates things...
-				if(this.debug) alert("waiting to play safe ct:"+this.audio_obj.currentTime+" - seeking-pos: "+seek_position+" - is-paused: "+this.audio_obj.paused+" - is-seeking: "+this.audio_obj.seekeing+" - abs(currenttime-seekpos): "+Math.abs(this.audio_obj.currentTime-seek_position));
-				this.play_safe(seek_position);
-			}.bind(this),250);
-}*/
-/*AudioSprite.prototype.wait_seeked_and_paused=function(){// wait until paused and not seekeing
-	// Although 'seeking' is undefined in data-connections it works since it is evaluated to false in js
-	if(this.audio_obj.paused && !this.audio_obj.seekeing) return;
-	else setTimeout(function(){
-				this.seeked_and_paused_intents++;
-				if(this.seeked_and_paused_intents>=AudioSprite.CHECK_IF_SEEKED_PAUSED_MAX_INTENTS){
-					alert("ERROR: Problems pausing audio (wait_seeked_and_paused)");
-				}
-				if(this.debug) alert("waiting to seek safe ct:"+this.audio_obj.currentTime);
-				this.wait_seeked_and_paused();
-			}.bind(this),250);
-}*/
 AudioSprite.prototype.audioSpritePositionCheck = function() {// time update handler to ensure we stop when a sprite is complete
 	if(this.debug)console.log("playing: "+this.audio_obj.currentSrc+" time:"+this.audio_obj.currentTime+" ended:"+this.audio_obj.ended);
 	if (this.ended || (!this.range_ended && this.audio_obj.currentTime >= (this.currentSpriteRange.end+AudioSprite.AUDIO_RALENTIZATION_LAG)) ) {
@@ -683,25 +665,11 @@ AudioSprite.prototype.audioSpritePositionCheck = function() {// time update hand
 		setTimeout(function(){this.audioSpritePositionCheck();}.bind(this),AudioSprite.CHECK_SOUND_POSITION_TIMEOUT);
 	}
 };
-// DEPRECATED... TOO MUCH CHECKINGS... DO NOT DELETE IN CASE WE NEED IT...
-/*AudioSprite.prototype.onAudioSpriteTimeUpdate = function() {// time update handler to ensure we stop when a sprite is complete
-   if(this.debug)console.log("playing: "+this.audio_obj.currentSrc+" time:"+audio_obj.currentTime+" ended:"+audio_obj.ended)
-    if (this.ended || (!this.range_ended && this.audio_obj.currentTime >= (this.currentSpriteRange.end+AudioSprite.AUDIO_RALENTIZATION_LAG)) ) { 
-    	if(this.debug) console.log("Sprite range play ended!!")
-        this.audio_obj.pause()
-        this.wait_seeked_and_paused()
-        this.currentTime=0 // probably unnecessary
-        this.wait_seeked_and_paused()
-       	this.range_ended=true
-	if(this.audio_obj.hasOwnProperty("callback_on_end") && typeof(this.audio_obj.callback_on_end) === 'function' ) this.audio_obj.callback_on_end();
-    }
-};*/
-
-
 ///////////////////////////////////////
 
 
-////////////////////////////////////////////////
+/// SoundChain /////////////////////////////////////////////
+// Handler for playing of sets (chains) of sounds of an AudioSprite
 var SoundChain={
 	audio_chain_waiting: false,
 	audio_chain_position: 0,
@@ -754,7 +722,11 @@ var SoundChain={
 }
 
 
-//////////////// Normal (no-sprite) audios handler ////////////////////////
+/// AudioLib ////////////////////////
+// Handler for normal (no-sprite) audios (play single or arr)
+// NOTE: using arrays is still better since old or device browsers are better
+// playing parts of one audio file than loading multiple audios (some can only
+// load one at a time so changing them takes time, slowness effect)
 var AudioLib={
 	sounds_ref: undefined,
 	debug: false,
@@ -823,7 +795,6 @@ var AudioLib={
 		}
 	}
 }
-
 // --------------------------------------------------
 
 
