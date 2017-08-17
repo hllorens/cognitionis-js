@@ -148,11 +148,11 @@ var ResourceLoader={
 			ResourceLoader.ret_media.sounds[get_resource_name(ResourceLoader.not_loaded['sounds'][i])].load(); // play()-pause() with 1ms timeout extreme alternative
 		}	
 	},
-	check_for_audios_readyState4: function(){
+	check_for_audios_readyState4: function(){ // or 3
 		for(var i=0;i<ResourceLoader.not_loaded.sounds.length;i++){
 			var res_url=ResourceLoader.not_loaded.sounds[i];
-			if (ResourceLoader.ret_media.sounds[get_resource_name(res_url)]!==undefined && ResourceLoader.ret_media.sounds[get_resource_name(res_url)].readyState==4){
-				if(ResourceLoader.debug) console.log(res_url+" readyState==4 removing from not loaded.");
+			if (ResourceLoader.ret_media.sounds[get_resource_name(res_url)]!==undefined && (ResourceLoader.ret_media.sounds[get_resource_name(res_url)].readyState==4 || ResourceLoader.ret_media.sounds[get_resource_name(res_url)].readyState==3)){
+				if(ResourceLoader.debug) console.log(res_url+" readyState==4 or 3 ("+ResourceLoader.ret_media.sounds[get_resource_name(res_url)].readyState+") removing from not loaded.");
 				ResourceLoader.log_and_remove_from_not_loaded('readyState4','sounds',res_url);
 			}
 		}
