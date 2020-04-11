@@ -14,6 +14,7 @@ function is_cordova(){
 }
 function is_local(){
 	if( /^file:\/{3}[^\/]/i.test(window.location.href) ){
+        console.log('local: '+window.location.href);
 		return true;
 	}
 	return false;
